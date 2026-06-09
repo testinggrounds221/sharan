@@ -1,0 +1,6 @@
+{
+  "name": "Wedding Invitation",
+  "description": "A premium, interactive, single-page digital wedding invitation for Sharanraj and Annapurna featuring luxurious visual reveals, animations, and RSVP collection.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
