@@ -1,4 +1,4 @@
-export type AppPhase = 'envelope' | 'cover' | 'main';
+export type AppPhase = 'envelope' | 'cover' | 'main' | 'admin';
 
 export interface RSVPData {
   guestName: string;

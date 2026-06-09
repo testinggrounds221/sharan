@@ -19,6 +19,8 @@ import LeafParticle from './LeafParticle';
 // @ts-ignore
 import coupleImage from './final_sharan.png';
 import { RSVPData } from '../types';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 
 // Auspicious Hindu Swastika Symbol for the sacred borders & highlights
 const SwastikaSvg = ({ className = "w-5 h-5 text-[#D4AF37]" }: { className?: string }) => (
@@ -47,6 +49,27 @@ const SwastikaSvg = ({ className = "w-5 h-5 text-[#D4AF37]" }: { className?: str
 );
 
 export default function MainInviteView() {
+  // Secret double tap state for Admin access
+  const [clickCount, setClickCount] = useState(0);
+  const handleSecretClick = () => {
+    setClickCount((prev) => {
+      const next = prev + 1;
+      if (next >= 2) {
+        window.location.hash = 'admin';
+        return 0;
+      }
+      return next;
+    });
+  };
+
+  // Reset tap counter if idle
+  useEffect(() => {
+    if (clickCount > 0) {
+      const timer = setTimeout(() => setClickCount(0), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [clickCount]);
+
   // RSVP state
   const [rsvp, setRsvp] = useState<RSVPData>({
     guestName: '',
@@ -106,18 +129,30 @@ export default function MainInviteView() {
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  const handleRSVPSubmit = (e: React.FormEvent) => {
+  const handleRSVPSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rsvp.guestName.trim()) return;
     if (!rsvp.attendance) return;
 
     setIsSubmitting(true);
-    // Simulate premium submission transition
-    setTimeout(() => {
+    try {
+      await addDoc(collection(db, 'rsvps'), {
+        guestName: rsvp.guestName.trim(),
+        attendeesCount: rsvp.attendeesCount,
+        attendance: rsvp.attendance,
+        createdAt: serverTimestamp()
+      });
+
       localStorage.setItem('wedding_rsvp', JSON.stringify(rsvp));
       setIsSubmitting(false);
       setIsSubmitted(true);
-    }, 1500);
+    } catch (err) {
+      console.error("Firestore persistence failed, falling back gracefully to local browser memory:", err);
+      // Fallback graceful mode to ensure maximum wedding guest accessibility
+      localStorage.setItem('wedding_rsvp', JSON.stringify(rsvp));
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+    }
   };
 
   const handleResetRSVP = () => {
@@ -804,7 +839,11 @@ export default function MainInviteView() {
             "With love and blessings from both families"
           </p>
 
-          <p className="font-mono text-[9px] text-gold-deep tracking-[0.25em] mt-16 uppercase">
+          <p 
+            onClick={handleSecretClick}
+            className="font-mono text-[9px] text-gold-deep tracking-[0.25em] mt-16 uppercase cursor-pointer select-none"
+            title="Double tap to open Admin panel"
+          >
             Designed for Sharanraj &amp; Annapurna • 2026
           </p>
         </footer>

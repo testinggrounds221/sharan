@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "rsvp": {
+      "title": "RSVP",
+      "description": "Guest RSVP submission detailing their presence, count, and selected events.",
+      "type": "object",
+      "properties": {
+        "guestName": {
+          "type": "string",
+          "description": "Full name of the responding guest."
+        },
+        "attendeesCount": {
+          "type": "integer",
+          "description": "Number of attendees arriving with this guest."
+        },
+        "attendance": {
+          "type": "string",
+          "enum": ["wedding", "reception", "both", "declining", ""],
+          "description": "The specific wedding events the guest is RSVPing for."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time this response was recorded."
+        }
+      },
+      "required": ["guestName", "attendeesCount", "attendance", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/rsvps/{rsvpId}": {
+      "schema": "rsvp",
+      "description": "A collection containing all RSVP entries."
+    }
+  }
+}
