@@ -31,7 +31,7 @@ import {
   X
 } from 'lucide-react';
 
-const MASTER_KEYS = ['SharanWedsAnnapurna2026', 'SharanKAnnapurna', 'Annapurna2026', 'sb14rsvp'];
+const MASTER_KEYS = ['sharananursvp'];
 
 interface RSVPRecord {
   id: string;
