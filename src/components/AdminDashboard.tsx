@@ -15,6 +15,7 @@ import {
   handleFirestoreError, 
   OperationType 
 } from '../firebase';
+import { ALLOWED_ADMIN_EMAILS, MASTER_KEYS } from '../config';
 import { 
   Lock, 
   ShieldAlert, 
@@ -31,7 +32,7 @@ import {
   X
 } from 'lucide-react';
 
-const MASTER_KEYS = ['sharananursvp'];
+// MASTER_KEYS is imported from /config.ts
 
 interface RSVPRecord {
   id: string;
@@ -52,12 +53,13 @@ export default function AdminDashboard({ onGoBack }: { onGoBack: () => void }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [authError, setAuthError] = useState<string>('');
+  const [permissionError, setPermissionError] = useState<string>('');
 
   useEffect(() => {
     // Monitor auth changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      if (user && user.email === 'sb14backup@gmail.com') {
+      if (user && ALLOWED_ADMIN_EMAILS.includes(user.email || '')) {
         setIsAuthenticated(true);
       }
     });
@@ -79,6 +81,7 @@ export default function AdminDashboard({ onGoBack }: { onGoBack: () => void }) {
 
   const fetchRSVPs = async () => {
     setLoading(true);
+    setPermissionError('');
     try {
       const q = query(collection(db, 'rsvps'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
@@ -94,11 +97,15 @@ export default function AdminDashboard({ onGoBack }: { onGoBack: () => void }) {
         });
       });
       setRsvps(data);
-    } catch (err) {
-      console.error(err);
-      // If Firestore denies but family is authenticated client-side, let's load what we can
-      // Or show elegant error
-      handleFirestoreError(err, OperationType.LIST, 'rsvps');
+    } catch (err: any) {
+      console.error("Firestore read error:", err);
+      // If Firestore denies but family is authenticated client-side, let's show elegant error
+      const primaryAdminEmail = ALLOWED_ADMIN_EMAILS[0] || 'the admin';
+      setPermissionError(
+        !auth.currentUser
+          ? `As a security measure to prevent public scraping, direct database reading is restricted to verified administrators. Since you are logged in using the offline Family Master Key, please click 'Log Out' and sign in using 'Authorize with Google' as ${primaryAdminEmail} to view the live Firestore list on this device.`
+          : `Firestore Access Error: ${err.message || 'Permission Denied'}.`
+      );
     } finally {
       setLoading(false);
     }
@@ -120,7 +127,7 @@ export default function AdminDashboard({ onGoBack }: { onGoBack: () => void }) {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      if (result.user.email === 'sb14backup@gmail.com') {
+      if (result.user.email && ALLOWED_ADMIN_EMAILS.includes(result.user.email)) {
         setIsAuthenticated(true);
       } else {
         setAuthError('Access denied. Only registered accounts can access Firestore directly.');
@@ -346,6 +353,26 @@ export default function AdminDashboard({ onGoBack }: { onGoBack: () => void }) {
                 <span>Log Out</span>
               </button>
             </div>
+
+            {permissionError && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-md shadow-sm"
+              >
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <ShieldAlert className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-semibold text-amber-800 font-cinzel tracking-wider uppercase">Live Database Synchronization Status</h3>
+                    <p className="mt-1.5 text-xs text-amber-700 font-sans leading-relaxed font-light">
+                      {permissionError}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* KPI STATS CARDS: BENTO GRID STYLE */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

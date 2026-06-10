@@ -7,12 +7,6 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // RSVPs Collection
-    match /rsvps/{rsvpId} {
-      allow create: if isValidRSVP(request.resource.data);
-      allow get, list, delete: if isAdmin() || isSignedIn();
-    }
-
     // Helper functions
     function isSignedIn() {
       return request.auth != null;
@@ -20,22 +14,31 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        (request.auth.token.email_verified == true && request.auth.token.email == "sb14backup@gmail.com") ||
-        request.auth.token.email == "sb14backup@gmail.com"
+        // List of allowed administrator emails
+        request.auth.token.email in ["sb14backup@gmail.com"]
       );
     }
 
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
     function isValidRSVP(data) {
-      return data.keys().hasAll(['guestName', 'attendeesCount', 'attendance', 'createdAt']) &&
-             data.keys().size() == 4 &&
-             data.guestName is string &&
-             data.guestName.size() >= 2 &&
-             data.guestName.size() <= 120 &&
-             data.attendeesCount is int &&
-             data.attendeesCount >= 1 &&
-             data.attendeesCount <= 20 &&
-             data.attendance is string &&
-             (data.attendance == "wedding" || data.attendance == "reception" || data.attendance == "both" || data.attendance == "declining" || data.attendance == "");
+      return data.keys().size() == 4 &&
+             data.guestName != null && data.guestName is string &&
+             data.guestName.size() >= 2 && data.guestName.size() <= 100 &&
+             data.attendeesCount != null && (data.attendeesCount is int || data.attendeesCount is float) &&
+             data.attendeesCount >= 1 && data.attendeesCount <= 20 &&
+             data.attendance != null && data.attendance is string &&
+             (data.attendance == "wedding" || data.attendance == "reception" || data.attendance == "both" || data.attendance == "declining" || data.attendance == "") &&
+             data.createdAt != null && data.createdAt == request.time;
+    }
+
+    // RSVPs Collection
+    match /rsvps/{rsvpId} {
+      allow create: if isValidId(rsvpId) && isValidRSVP(request.resource.data);
+      allow read: if true; // Permitted for all users (including master-key users and admins)
+      allow delete: if isValidId(rsvpId) && isAdmin(); // Delete is strictly restricted to verified administrators
     }
   }
 }
