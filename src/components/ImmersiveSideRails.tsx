@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import GopuramSvg from './GopuramSvg';
 
 export default function ImmersiveSideRails() {
   return (
@@ -23,16 +22,6 @@ export default function ImmersiveSideRails() {
 
         {/* Faint ambient sun/moon on the left panel exactly like photo */}
         <div className="absolute top-[5%] left-[25%] w-10 h-10 rounded-full border border-[#D4AF37]/25 bg-gradient-to-tr from-[#FFECA8]/10 to-transparent opacity-30 shadow-inner hidden md:block" />
-
-        {/* The majestic Left Dravidian temple tower */}
-        <motion.div
-          initial={{ opacity: 0, y: 150 }}
-          animate={{ opacity: 0.85, y: 0 }}
-          transition={{ duration: 1.8, ease: "easeOut" }}
-          className="w-full flex justify-center px-1 sm:px-2"
-        >
-          <GopuramSvg className="w-full max-w-[130px] filter saturate-[0.8] drop-shadow-[5px_-5px_15px_rgba(85,63,15,0.08)]" height="75vh" />
-        </motion.div>
       </div>
 
       {/* RIGHT MARGIN: RIGHT FLAP TEMPLE RAILS */}
@@ -49,16 +38,6 @@ export default function ImmersiveSideRails() {
             <path d="M 2,12 Q 8,4 12,10 Q 16,4 22,12" />
           </svg>
         </div>
-
-        {/* The majestic Right Dravidian temple tower */}
-        <motion.div
-          initial={{ opacity: 0, y: 150 }}
-          animate={{ opacity: 0.85, y: 0 }}
-          transition={{ duration: 1.8, ease: "easeOut", delay: 0.2 }}
-          className="w-full flex justify-center px-1 sm:px-2"
-        >
-          <GopuramSvg className="w-full max-w-[130px] filter saturate-[0.8] drop-shadow-[-5px_-5px_15px_rgba(85,63,15,0.08)]" height="75vh" />
-        </motion.div>
       </div>
 
       {/* Huge subtle Backdrop SA Watermark from updated photo monogram style */}
