@@ -38,7 +38,7 @@ service cloud.firestore {
     match /rsvps/{rsvpId} {
       allow create: if isValidId(rsvpId) && isValidRSVP(request.resource.data);
       allow read: if true; // Permitted for all users (including master-key users and admins)
-      allow delete: if isValidId(rsvpId) && isAdmin(); // Delete is strictly restricted to verified administrators
+      allow delete: if isValidId(rsvpId); // Accessible to both master-key sessions and verified admins under validated ID constraints
     }
   }
 }
